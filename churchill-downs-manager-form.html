@@ -76,9 +76,9 @@
   .toggle-btn { padding: 10px 6px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--cream); color: var(--text-muted); cursor: pointer; font-size: 12px; font-family: 'DM Sans', sans-serif; font-weight: 500; text-align: center; transition: all .15s; display: flex; flex-direction: column; align-items: center; gap: 5px; }
   .toggle-btn:hover { border-color: var(--gold); color: var(--green); }
   .toggle-btn .icon { font-size: 18px; }
-  .toggle-btn.active-add    { background: #eaf5ee; border-color: #5aa872; color: #2d7a48; }
-  .toggle-btn.active-update { background: #e8f0fb; border-color: #5a82c8; color: #2d52a0; }
-  .toggle-btn.active-remove { background: #fbeaea; border-color: #c87a7a; color: #a03030; }
+  .toggle-btn.active-add    { background: #2d7a48; border-color: #2d7a48; color: #ffffff; font-weight: 500; }
+  .toggle-btn.active-update { background: #2d52a0; border-color: #2d52a0; color: #ffffff; font-weight: 500; }
+  .toggle-btn.active-remove { background: #a03030; border-color: #a03030; color: #ffffff; font-weight: 500; }
   .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
   .field-row.full { grid-template-columns: 1fr; }
   .field { display: flex; flex-direction: column; gap: 5px; }
@@ -194,12 +194,18 @@
 
       <div class="section-label">Request type</div>
       <div class="action-toggle">
-        <button class="toggle-btn active-add" onclick="setAction('Add')" id="btn-add"><span class="icon">➕</span>Add manager</button>
-        <button class="toggle-btn" onclick="setAction('Update')" id="btn-update"><span class="icon">✏️</span>Update manager</button>
-        <button class="toggle-btn" onclick="setAction('Remove')" id="btn-remove"><span class="icon">🗑</span>Remove manager</button>
+        <button class="toggle-btn active-add" onclick="setAction('Add')" id="btn-add"><span class="icon">➕</span>Add</button>
+        <button class="toggle-btn" onclick="setAction('Update')" id="btn-update"><span class="icon">✏️</span>Update</button>
+        <button class="toggle-btn" onclick="setAction('Remove')" id="btn-remove"><span class="icon">🗑</span>Remove / Deactivate</button>
       </div>
 
-      <div class="remove-notice" id="remove-notice">⚠️ This will deactivate the manager's access. Please provide their name, email and property to process the removal.</div>
+      <div class="remove-notice" id="add-notice" style="background:#eaf5ee;border:1px solid #5aa872;border-radius:var(--radius);padding:10px 14px;font-size:13px;color:#2d7a48;margin-bottom:1rem;display:block;">
+        ➕ Use this to request access for a new property manager. Fill in their details below and we'll get them set up.
+      </div>
+      <div class="remove-notice" id="update-notice" style="background:#e8f0fb;border:1px solid #5a82c8;border-radius:var(--radius);padding:10px 14px;font-size:13px;color:#2d52a0;margin-bottom:1rem;display:none;">
+        ✏️ Use this to update an existing manager's details such as their name, email, or role.
+      </div>
+      <div class="remove-notice" id="remove-notice" style="display:none;">⚠️ Use this to deactivate a manager's access. Please provide their name, email and property to process the removal.</div>
 
       <div class="section-label">Property</div>
       <div class="field-row full">
@@ -232,21 +238,7 @@
         </div>
       </div>
 
-      <div id="remove-fields" style="display:none">
-        <hr class="divider" />
-        <div class="section-label">Removal details</div>
-        <div class="field-row">
-          <div class="field"><label>Effective date</label><input type="date" id="removal-date" /></div>
-          <div class="field">
-            <label>Reason for removal</label>
-            <select id="removal-reason">
-              <option value="">Select a reason</option>
-              <option>Resigned</option><option>Terminated</option>
-              <option>Role change</option><option>Property transfer</option><option>Other</option>
-            </select>
-          </div>
-        </div>
-      </div>
+      <div id="remove-fields" style="display:none"></div>
 
       <hr class="divider" />
       <div class="section-label" style="margin-top:.75rem">Additional notes</div>
@@ -344,10 +336,12 @@ function setAction(action) {
   document.getElementById('update-fields').style.display   = action==='Update'?'block':'none';
   document.getElementById('remove-fields').style.display   = action==='Remove'?'block':'none';
   document.getElementById('add-update-fields').style.display = action==='Remove'?'none':'block';
-  document.getElementById('remove-notice').style.display   = action==='Remove'?'block':'none';
+  document.getElementById('add-notice').style.display    = action==='Add'?'block':'none';
+  document.getElementById('update-notice').style.display  = action==='Update'?'block':'none';
+  document.getElementById('remove-notice').style.display  = action==='Remove'?'block':'none';
   const btn=document.getElementById('submit-btn');
   btn.className='submit-btn '+action.toLowerCase();
-  btn.textContent={Add:'Submit add request',Update:'Submit update request',Remove:'Submit removal request'}[action];
+  btn.textContent={Add:'Submit add request',Update:'Submit update request',Remove:'Submit remove / deactivate request'}[action];
   clearStatus();
 }
 function val(id) { const el=document.getElementById(id); return el?(el.value||'').trim():''; }
