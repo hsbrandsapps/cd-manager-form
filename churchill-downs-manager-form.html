@@ -58,6 +58,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);
 .add-prop-row input:focus{border-color:var(--gold)}
 .add-prop-row button{padding:8px 16px;background:var(--green);color:var(--gold-mid);border:none;border-radius:var(--radius);font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer;white-space:nowrap}
 .admin-upload-section{border-top:1px solid var(--border);padding-top:1rem;margin-top:.5rem}
+.mgr-item{display:flex;align-items:center;gap:8px;background:var(--cream);border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;font-size:12px}
+.mgr-item-info{flex:1;min-width:0}
+.mgr-item-name{font-weight:500;color:var(--green);margin-bottom:1px}
+.mgr-item-sub{color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.admin-toggle-active{background:var(--green)!important;color:var(--gold-mid)!important;border-color:var(--green)!important}
 .admin-upload-label{font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:.5rem;display:block}
 .upload-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:var(--green);color:var(--gold-mid);border:none;border-radius:var(--radius);font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer}
 .upload-status{font-size:12px;color:var(--text-muted);margin-top:6px}
@@ -116,8 +121,8 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
 .manager-card .mc-row span{color:var(--text)}
 
 /* Update sub options */
-.update-sub{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:1rem}
-.sub-btn{padding:8px 6px;border:1px solid var(--border);border-radius:var(--radius);background:var(--cream);color:var(--text-muted);cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;text-align:center;transition:all .15s}
+.update-sub{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1rem}
+.sub-btn{padding:8px 6px;border:1px solid var(--border);border-radius:var(--radius);background:var(--cream);color:var(--text-muted);cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;text-align:center;transition:all .15s;flex:1;min-width:120px}
 .sub-btn:hover{border-color:var(--gold);color:var(--green)}
 .sub-btn.active{background:#2d52a0;border-color:#2d52a0;color:#fff;font-weight:500}
 
@@ -163,6 +168,20 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   .action-toggle{grid-template-columns:1fr}
   .update-sub{grid-template-columns:1fr}
 }
+
+/* Searchable select */
+.ss-wrap{position:relative;width:100%}
+.ss-input{font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:var(--cream);border:1px solid var(--border);border-radius:var(--radius);padding:9px 32px 9px 12px;width:100%;outline:none;cursor:pointer;transition:border-color .15s;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b6b5a' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.ss-input:focus{border-color:var(--gold);background-color:var(--white)}
+.ss-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--white);border:1px solid var(--gold);border-top:none;border-radius:0 0 var(--radius) var(--radius);max-height:200px;overflow-y:auto;z-index:100;display:none;box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.ss-dropdown.open{display:block}
+.ss-search{padding:8px 10px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--white)}
+.ss-search input{width:100%;font-family:'DM Sans',sans-serif;font-size:13px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);outline:none;background:var(--cream)}
+.ss-search input:focus{border-color:var(--gold)}
+.ss-option{padding:8px 12px;font-size:13px;cursor:pointer;color:var(--text)}
+.ss-option:hover{background:var(--gold-light)}
+.ss-option.selected{background:var(--green);color:#fff}
+.ss-option.disabled{color:var(--text-muted);font-style:italic}
 </style>
 </head>
 <body>
@@ -227,14 +246,61 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
   <div class="admin-panel" id="admin-panel">
     <div class="admin-panel-hdr">
       <p class="admin-panel-title">🏢 Admin Panel — Churchill Downs</p>
-      <button class="lock-btn" onclick="lockAdmin()">🔒 Lock</button>
+      <button class="lock-btn" onclick="lockAdmin()">🚪 Logout</button>
     </div>
 
-    <p style="font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:.5rem">Property List</p>
-    <ul class="prop-list" id="prop-list"></ul>
-    <div class="add-prop-row">
-      <input type="text" id="new-prop" placeholder="New property name..." onkeydown="if(event.key==='Enter')addProperty()"/>
-      <button onclick="addProperty()">+ Add</button>
+    <!-- Toggle buttons -->
+    <div style="display:flex;gap:8px;margin-bottom:1rem">
+      <button id="btn-show-props" onclick="toggleAdminSection('props')" style="flex:1;padding:9px;background:var(--cream);border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500;color:var(--green);cursor:pointer">🏢 Manage Properties</button>
+      <button id="btn-show-managers" onclick="toggleAdminSection('managers')" style="flex:1;padding:9px;background:var(--cream);border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500;color:var(--green);cursor:pointer">👤 Manage Managers</button>
+    </div>
+
+    <!-- Properties section -->
+    <div id="admin-props-section" style="display:none;margin-bottom:1rem">
+      <p style="font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:.5rem">Property List</p>
+      <ul class="prop-list" id="prop-list"></ul>
+      <div class="add-prop-row">
+        <input type="text" id="new-prop" placeholder="New property name..." onkeydown="if(event.key==='Enter')addProperty()"/>
+        <button onclick="addProperty()">+ Add</button>
+      </div>
+    </div>
+
+    <!-- Managers section -->
+    <div id="admin-managers-section" style="display:none;margin-bottom:1rem">
+      <p style="font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:.5rem">Manager List <span id="mgr-count" style="color:var(--gold)"></span></p>
+      <div style="margin-bottom:.75rem">
+        <input type="text" id="mgr-search" placeholder="Search by name, email or property..." oninput="renderManagerList()" style="font-size:13px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--cream);width:100%;outline:none"/>
+      </div>
+      <div id="mgr-list" style="display:flex;flex-direction:column;gap:6px;max-height:400px;overflow-y:auto"></div>
+
+      <!-- Edit manager modal -->
+      <div id="mgr-edit-modal" style="display:none;background:var(--cream);border:1px solid var(--gold-mid);border-radius:var(--radius);padding:1rem;margin-top:.75rem">
+        <p style="font-size:13px;font-weight:500;color:var(--green);margin-bottom:.75rem">✏️ Edit Manager</p>
+        <input type="hidden" id="mgr-edit-idx"/>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div class="field"><label>First Name</label><input type="text" id="mgr-edit-first"/></div>
+          <div class="field"><label>Last Name</label><input type="text" id="mgr-edit-last"/></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div class="field"><label>Email</label><input type="email" id="mgr-edit-email"/></div>
+          <div class="field"><label>Level</label>
+            <select id="mgr-edit-level">
+              <option>General Access</option>
+              <option>Property Leaders</option>
+              <option>VP POD</option>
+              <option>CDI All Properties</option>
+            </select>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:10px"><label>Property</label>
+          <select id="mgr-edit-property"></select>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button onclick="saveMgrEdit()" style="flex:1;padding:9px;background:var(--green);color:var(--gold-mid);border:none;border-radius:var(--radius);font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500;cursor:pointer">✅ Save Changes</button>
+          <button onclick="cancelMgrEdit()" style="flex:1;padding:9px;background:none;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text-muted);cursor:pointer">Cancel</button>
+        </div>
+        <div class="upload-status" id="mgr-edit-status"></div>
+      </div>
     </div>
 
     <div class="admin-upload-section">
@@ -259,9 +325,24 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
       </div>
       <div class="upload-status" id="props-upload-status"></div>
     </div>
+    <div class="admin-upload-section" style="margin-top:1rem;border-top:1px solid var(--border);padding-top:1rem">
+      <span class="admin-upload-label">📊 Export Submissions</span>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:.5rem">
+        <div class="field" style="flex:1;min-width:140px">
+          <label style="font-size:11px;color:var(--text-muted)">From Date</label>
+          <input type="date" id="export-from" style="font-size:13px;padding:7px 10px"/>
+        </div>
+        <div class="field" style="flex:1;min-width:140px">
+          <label style="font-size:11px;color:var(--text-muted)">To Date</label>
+          <input type="date" id="export-to" style="font-size:13px;padding:7px 10px"/>
+        </div>
+        <button class="upload-btn" onclick="exportSubmissions()" style="margin-top:18px;background:#184c31">⬇ Export Excel</button>
+      </div>
+      <div class="upload-status" id="export-status"></div>
+    </div>
   </div>
 
-  <div class="form-card">
+  <div class="form-card" id="main-form-card">
     <div class="form-card-header">
       <h2>Manager Administration Request</h2>
       <p>Submit to add, update, or remove a property manager</p>
@@ -529,7 +610,309 @@ let selectedAddProps = [], selectedUpdProps = [], currentUpdateSub = '';
 function storageGet(){ try{ const v=localStorage.getItem(STORAGE_KEY); return v?JSON.parse(v):null; }catch(e){return null;} }
 function storageSet(v){ try{ localStorage.setItem(STORAGE_KEY,JSON.stringify(v)); }catch(e){} }
 
+// ── CSV parser (handles quoted commas) ──
+function parseCSVLine(line){
+  const result = [];
+  let cur = '', inQuotes = false;
+  for(let i=0;i<line.length;i++){
+    const ch = line[i];
+    if(ch==='"'){ inQuotes=!inQuotes; }
+    else if(ch===',' && !inQuotes){ result.push(cur.trim()); cur=''; }
+    else { cur+=ch; }
+  }
+  result.push(cur.trim());
+  return result;
+}
+
+// ── Admin section toggles ──
+let activeAdminSection = '';
+function toggleAdminSection(section){
+  if(activeAdminSection === section){
+    // Collapse
+    document.getElementById('admin-props-section').style.display='none';
+    document.getElementById('admin-managers-section').style.display='none';
+    document.getElementById('btn-show-props').className='';
+    document.getElementById('btn-show-managers').className='';
+    document.getElementById('btn-show-props').style.cssText='flex:1;padding:9px;background:var(--cream);border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:DM Sans,sans-serif;font-weight:500;color:var(--green);cursor:pointer';
+    document.getElementById('btn-show-managers').style.cssText='flex:1;padding:9px;background:var(--cream);border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:DM Sans,sans-serif;font-weight:500;color:var(--green);cursor:pointer';
+    activeAdminSection='';
+    return;
+  }
+  activeAdminSection = section;
+  const showProps = section==='props';
+  document.getElementById('admin-props-section').style.display = showProps?'block':'none';
+  document.getElementById('admin-managers-section').style.display = showProps?'none':'block';
+  // Style active button
+  const activeBtn = document.getElementById(showProps?'btn-show-props':'btn-show-managers');
+  const inactiveBtn = document.getElementById(showProps?'btn-show-managers':'btn-show-props');
+  activeBtn.style.cssText='flex:1;padding:9px;background:var(--green);border:1px solid var(--green);border-radius:var(--radius);font-size:13px;font-family:DM Sans,sans-serif;font-weight:500;color:var(--gold-mid);cursor:pointer';
+  inactiveBtn.style.cssText='flex:1;padding:9px;background:var(--cream);border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-family:DM Sans,sans-serif;font-weight:500;color:var(--green);cursor:pointer';
+  if(section==='managers') renderManagerList();
+}
+
+function renderManagerList(){
+  const search = (document.getElementById('mgr-search').value||'').toLowerCase();
+  const list = document.getElementById('mgr-list');
+  const filtered = MANAGERS.filter(m=>{
+    if(!search) return true;
+    return (m.firstName+' '+m.lastName+' '+m.email+' '+m.property).toLowerCase().includes(search);
+  });
+  document.getElementById('mgr-count').textContent = `(${filtered.length} of ${MANAGERS.length})`;
+  list.innerHTML='';
+  if(!filtered.length){ list.innerHTML='<p style="font-size:13px;color:var(--text-muted);text-align:center;padding:.5rem">No managers found.</p>'; return; }
+  filtered.forEach((m,i)=>{
+    const realIdx = MANAGERS.indexOf(m);
+    const div = document.createElement('div'); div.className='mgr-item';
+    div.innerHTML=`<div class="mgr-item-info">
+      <div class="mgr-item-name">${esc(m.firstName)} ${esc(m.lastName)}</div>
+      <div class="mgr-item-sub">${esc(m.property)} — ${esc(m.email)}</div>
+    </div>
+    <button onclick="startMgrEdit(${realIdx})" style="background:none;border:1px solid var(--border);border-radius:var(--radius);padding:4px 10px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--green)">✎ Edit</button>`;
+    list.appendChild(div);
+  });
+}
+
+function startMgrEdit(idx){
+  const m = MANAGERS[idx];
+  document.getElementById('mgr-edit-idx').value = idx;
+  document.getElementById('mgr-edit-first').value = m.firstName;
+  document.getElementById('mgr-edit-last').value = m.lastName;
+  document.getElementById('mgr-edit-email').value = m.email;
+  document.getElementById('mgr-edit-level').value = m.level;
+  // Populate property dropdown
+  const sel = document.getElementById('mgr-edit-property');
+  sel.innerHTML='';
+  sortedProps().forEach(p=>{ const o=document.createElement('option'); o.value=o.textContent=p; if(p===m.property) o.selected=true; sel.appendChild(o); });
+  document.getElementById('mgr-edit-modal').style.display='block';
+  document.getElementById('mgr-edit-status').textContent='';
+  document.getElementById('mgr-edit-modal').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function cancelMgrEdit(){
+  document.getElementById('mgr-edit-modal').style.display='none';
+}
+
+async function saveMgrEdit(){
+  const idx = parseInt(document.getElementById('mgr-edit-idx').value);
+  const status = document.getElementById('mgr-edit-status');
+  const updated = {
+    firstName: document.getElementById('mgr-edit-first').value.trim(),
+    lastName: document.getElementById('mgr-edit-last').value.trim(),
+    email: document.getElementById('mgr-edit-email').value.trim(),
+    level: document.getElementById('mgr-edit-level').value,
+    property: document.getElementById('mgr-edit-property').value
+  };
+  if(!updated.firstName||!updated.lastName||!updated.email){ status.textContent='⚠️ Please fill in all fields.'; status.className='upload-status err'; return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(updated.email)){ status.textContent='⚠️ Please enter a valid email address.'; status.className='upload-status err'; return; }
+  status.textContent='⏳ Saving...'; status.className='upload-status';
+  try{
+    // Update in Supabase — find by old email and update
+    const old = MANAGERS[idx];
+    const r = await fetch(`${SB_URL}/rest/v1/managers?email=eq.${encodeURIComponent(old.email)}&property=eq.${encodeURIComponent(old.property)}`,{
+      method:'PATCH',
+      headers:{...SB_HEADERS,'Prefer':'return=minimal'},
+      body:JSON.stringify({"firstName":updated.firstName,"lastName":updated.lastName,"email":updated.email,"level":updated.level,"property":updated.property})
+    });
+    if(!r.ok) throw new Error(await r.text());
+    MANAGERS[idx] = {...MANAGERS[idx], ...updated};
+    status.textContent='✅ Saved successfully'; status.className='upload-status ok';
+    renderManagerList();
+    setTimeout(()=>{ document.getElementById('mgr-edit-modal').style.display='none'; }, 1200);
+  } catch(e){
+    status.textContent='❌ Save failed: '+e.message; status.className='upload-status err';
+  }
+}
+
+async function logSubmission(title, notes){
+  // Parse fields from notes string
+  const get = (key) => { const m = notes.match(new RegExp(key+': (.+)')); return m ? m[1].trim() : ''; };
+  const row = {
+    request_type: get('Request Type'),
+    client: get('Client'),
+    access_level: get('Access Level') || '',
+    properties: get('Properties') || '',
+    manager_name: get('Manager Name') || '',
+    email: get('Email') || '',
+    full_details: notes
+  };
+  await sbInsertMany('submissions', [row]);
+}
+
+async function exportSubmissions(){
+  const status = document.getElementById('export-status');
+  const from = document.getElementById('export-from').value;
+  const to = document.getElementById('export-to').value;
+  status.textContent = '⏳ Fetching submissions...';
+  status.className = 'upload-status';
+
+  try{
+    let url = `${SB_URL}/rest/v1/submissions?select=*&order=submitted_at.asc`;
+    if(from) url += `&submitted_at=gte.${from}T00:00:00`;
+    if(to)   url += `&submitted_at=lte.${to}T23:59:59`;
+    const r = await fetch(url, {headers: SB_HEADERS});
+    if(!r.ok) throw new Error(await r.text());
+    const data = await r.json();
+
+    if(!data.length){ status.textContent = '⚠️ No submissions found for selected date range.'; status.className='upload-status err'; return; }
+
+    const fmt = (row) => ({
+      'Date': row.submitted_at ? new Date(row.submitted_at).toLocaleDateString('en-US') : '',
+      'Request Type': row.request_type || '',
+      'Client': row.client || '',
+      'Access Level': row.access_level || '',
+      'Properties': row.properties || '',
+      'Manager Name': row.manager_name || '',
+      'Email': row.email || '',
+      'Full Details': row.full_details || ''
+    });
+
+    const adds    = data.filter(r=>r.request_type==='Add').map(fmt);
+    const updates = data.filter(r=>r.request_type==='Update').map(fmt);
+    const removes = data.filter(r=>['Remove','Remove/Deactivate'].includes(r.request_type)).map(fmt);
+
+    const wb = XLSX.utils.book_new();
+    const mkSheet = (rows) => {
+      if(!rows.length) rows = [{'Date':'','Request Type':'','Client':'','Access Level':'','Properties':'','Manager Name':'','Email':'','Full Details':'No records'}];
+      return XLSX.utils.json_to_sheet(rows);
+    };
+    XLSX.utils.book_append_sheet(wb, mkSheet(adds),    'Add Requests');
+    XLSX.utils.book_append_sheet(wb, mkSheet(updates), 'Update Requests');
+    XLSX.utils.book_append_sheet(wb, mkSheet(removes), 'Remove Requests');
+
+    const dateStr = from && to ? `${from}_to_${to}` : new Date().toISOString().slice(0,10);
+    XLSX.writeFile(wb, `CD_Submissions_${dateStr}.xlsx`);
+    status.textContent = `✅ Exported ${data.length} submissions`;
+    status.className = 'upload-status ok';
+  } catch(e){
+    status.textContent = '❌ Export failed: ' + e.message;
+    status.className = 'upload-status err';
+  }
+}
+
+
+// ══════════ SEARCHABLE SELECT ══════════
+// Usage: makeSearchable('select-id', placeholderText)
+// The original <select> is hidden and kept in sync for form logic.
+const _ssInstances = {};
+
+function makeSearchable(selectId, placeholder){
+  const sel = document.getElementById(selectId);
+  if(!sel || sel.dataset.ss) return; // already done
+  sel.dataset.ss = '1';
+  sel.style.display = 'none';
+
+  const wrap = document.createElement('div');
+  wrap.className = 'ss-wrap';
+  wrap.id = 'ss-wrap-' + selectId;
+  sel.parentNode.insertBefore(wrap, sel);
+  wrap.appendChild(sel);
+
+  const display = document.createElement('div');
+  display.className = 'ss-input';
+  display.id = 'ss-display-' + selectId;
+  display.textContent = placeholder || 'Select...';
+  display.tabIndex = 0;
+
+  const dropdown = document.createElement('div');
+  dropdown.className = 'ss-dropdown';
+  dropdown.id = 'ss-dd-' + selectId;
+
+  const searchWrap = document.createElement('div');
+  searchWrap.className = 'ss-search';
+  const searchInput = document.createElement('input');
+  searchInput.type = 'text';
+  searchInput.placeholder = 'Search...';
+  searchWrap.appendChild(searchInput);
+  dropdown.appendChild(searchWrap);
+
+  const optList = document.createElement('div');
+  optList.id = 'ss-opts-' + selectId;
+  dropdown.appendChild(optList);
+
+  wrap.insertBefore(display, sel);
+  wrap.appendChild(dropdown);
+
+  _ssInstances[selectId] = {sel, display, dropdown, searchInput, optList, placeholder: placeholder||'Select...'};
+
+  function renderOpts(filter){
+    optList.innerHTML = '';
+    const opts = Array.from(sel.options);
+    const f = (filter||'').toLowerCase();
+    opts.forEach(o => {
+      if(!o.value && !filter) { return; } // skip placeholder when no filter
+      if(f && !o.textContent.toLowerCase().includes(f)) return;
+      const div = document.createElement('div');
+      div.className = 'ss-option' + (o.selected ? ' selected' : '') + (!o.value ? ' disabled' : '');
+      div.textContent = o.textContent;
+      div.dataset.value = o.value;
+      if(o.value){
+        div.addEventListener('mousedown', function(e){
+          e.preventDefault();
+          sel.value = o.value;
+          display.textContent = o.textContent;
+          display.style.color = '';
+          closeDropdown();
+          // Trigger change event
+          sel.dispatchEvent(new Event('change', {bubbles:true}));
+        });
+      }
+      optList.appendChild(div);
+    });
+    if(!optList.children.length){
+      const d=document.createElement('div'); d.className='ss-option disabled'; d.textContent='No results'; optList.appendChild(d);
+    }
+  }
+
+  function openDropdown(){
+    // Close all others first
+    Object.keys(_ssInstances).forEach(id=>{ if(id!==selectId) closeDropdownById(id); });
+    renderOpts('');
+    dropdown.classList.add('open');
+    searchInput.value='';
+    searchInput.focus();
+  }
+  function closeDropdown(){ dropdown.classList.remove('open'); }
+
+  display.addEventListener('click', function(){ dropdown.classList.contains('open') ? closeDropdown() : openDropdown(); });
+  display.addEventListener('keydown', function(e){ if(e.key==='Enter'||e.key===' ') openDropdown(); });
+  searchInput.addEventListener('input', function(){ renderOpts(this.value); });
+  searchInput.addEventListener('keydown', function(e){ if(e.key==='Escape') closeDropdown(); });
+  document.addEventListener('click', function(e){ if(!wrap.contains(e.target)) closeDropdown(); });
+
+  // Sync display when select value changes programmatically
+  const observer = new MutationObserver(()=>ssSync(selectId));
+  observer.observe(sel, {attributes:true, childList:true, subtree:true});
+}
+
+function closeDropdownById(id){
+  const inst = _ssInstances[id];
+  if(inst) inst.dropdown.classList.remove('open');
+}
+
+function ssSync(selectId){
+  const inst = _ssInstances[selectId];
+  if(!inst) return;
+  const {sel, display, placeholder} = inst;
+  const selected = sel.options[sel.selectedIndex];
+  if(selected && selected.value){
+    display.textContent = selected.textContent;
+    display.style.color = '';
+  } else {
+    display.textContent = placeholder;
+    display.style.color = 'var(--text-muted)';
+  }
+}
+
+function ssRebuild(selectId){
+  // Called after options are re-populated to re-render
+  ssSync(selectId);
+}
+
+// ══════════ END SEARCHABLE SELECT ══════════
+
 async function loadProperties(){
+  // Show loading state
+  document.querySelectorAll('.ss-input').forEach(el=>{ el.style.color='var(--text-muted)'; });
   // Load properties from Supabase, fall back to localStorage, then DEFAULT_PROPERTIES
   try{
     const rows = await sbGet('properties');
@@ -547,6 +930,8 @@ async function loadProperties(){
   renderAllDropdowns();
   renderAdminList();
   await loadManagersFromSupabase();
+  // Reset loading state on dropdowns
+  ['upd-property','rem-property','add-property-select','upd-addprop-select','upd-removeprop-select','upd-transfer-prop'].forEach(id=>ssSync(id));
 }
 
 async function loadManagersFromSupabase(){
@@ -624,6 +1009,8 @@ function renderAllDropdowns(){
       updSel.appendChild(o);
     });
   }
+  // Sync all searchable selects
+  ['upd-property','rem-property','upd-transfer-prop','add-property-select','upd-addprop-select','upd-removeprop-select'].forEach(id=>ssSync(id));
 }
 
 function renderAdminList(){
@@ -693,11 +1080,12 @@ function processUpload(){
     const reader = new FileReader();
     reader.onload = function(ev){
       try{
-        const lines = ev.target.result.split('\n');
-        const headers = lines[0].split(',').map(h=>h.trim().replace(/"/g,''));
+        const lines = ev.target.result.split(/\r?\n/);
+        const headers = parseCSVLine(lines[0]);
         const data = [];
         for(let i=1;i<lines.length;i++){
-          const cols = lines[i].split(',').map(c=>c.trim().replace(/"/g,''));
+          if(!lines[i].trim()) continue;
+          const cols = parseCSVLine(lines[i]);
           if(cols.length < 4) continue;
           const row = {};
           headers.forEach((h,j)=>row[h]=cols[j]||'');
@@ -756,6 +1144,7 @@ async function showUploadSuccess(count, managersData){
 
   try{
     // Clear existing managers and insert new ones
+    if(!confirm(`This will replace all ${count} managers in the database. Are you sure?`)) return;
     await sbDelete('managers');
     // Insert in batches of 200 to stay within limits
     const batchSize = 200;
@@ -803,14 +1192,15 @@ function processPropsUpload(){
     const reader = new FileReader();
     reader.onload = async function(ev){
       try{
-        const lines = ev.target.result.split('\n');
-        const headers = lines[0].split(',').map(h=>h.trim().replace(/"/g,'').toLowerCase());
+        const lines = ev.target.result.split(/\r?\n/);
+        const headers = parseCSVLine(lines[0]).map(h=>h.toLowerCase().trim());
         const nameIdx = headers.indexOf('name') !== -1 ? headers.indexOf('name') : headers.indexOf('property');
         if(nameIdx === -1){ status.textContent = '❌ No "name" or "Property" column found.'; status.className='upload-status err'; return; }
         const names = [];
         for(let i=1;i<lines.length;i++){
-          const cols = lines[i].split(',').map(c=>c.trim().replace(/"/g,''));
-          if(cols[nameIdx]) names.push(cols[nameIdx]);
+          if(!lines[i].trim()) continue;
+          const cols = parseCSVLine(lines[i]);
+          if(cols[nameIdx]) names.push(cols[nameIdx].trim());
         }
         await savePropsToSupabase(names, status);
       } catch(err){
@@ -882,6 +1272,7 @@ function doLogin(){
   if(u===ADMIN_USER && p===ADMIN_PASS){
     isAdmin=true; closeLogin();
     document.getElementById('admin-panel').style.display='block';
+    document.getElementById('main-form-card').style.display='none';
     renderAdminList();
   } else {
     document.getElementById('login-err').classList.add('show');
@@ -896,6 +1287,7 @@ function toggleAdminPanel(){
 function lockAdmin(){
   isAdmin=false;
   document.getElementById('admin-panel').style.display='none';
+  document.getElementById('main-form-card').style.display='block';
 }
 
 // ── Form logic ──
@@ -1061,19 +1453,18 @@ function switchToUpdate(){
   propSel.value = match.property;
   loadManagersForProperty('update');
 
-  // Wait for managers to load then select the matching one
-  setTimeout(()=>{
-    const manSel = document.getElementById('upd-manager');
-    for(let i=0; i<manSel.options.length; i++){
-      const idx = manSel.options[i].dataset.idx;
-      if(idx !== undefined && MANAGERS[parseInt(idx)].email.toLowerCase() === email){
-        manSel.selectedIndex = i;
-        showManagerCard('update');
-        document.getElementById('upd-action-section').style.display = 'block';
-        break;
-      }
+  // Select matching manager immediately (managers already loaded)
+  const manSel = document.getElementById('upd-manager');
+  for(let i=0; i<manSel.options.length; i++){
+    const idx = manSel.options[i].dataset.idx;
+    if(idx !== undefined && MANAGERS[parseInt(idx)].email.toLowerCase() === email){
+      manSel.value = manSel.options[i].value;
+      ssSync('upd-manager');
+      showManagerCard('update');
+      document.getElementById('upd-action-section').style.display = 'block';
+      break;
     }
-  }, 100);
+  }
 }
 
 // ── Update/Remove manager loading ──
@@ -1128,6 +1519,7 @@ function loadManagersForProperty(mode){
     });
   }
   document.getElementById(sectionId).style.display='block';
+  ssSync(managerSelId);
 }
 
 function showManagerCard(mode){
@@ -1227,6 +1619,10 @@ function setUpdateSub(sub){
 // ── Form validation & submit ──
 function val(id){ const el=document.getElementById(id); return el?(el.value||'').trim():''; }
 
+function isValidEmail(email){
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
 function validateForm(){
   if(currentAction==='Add'){
     if(!val('add-access-level')) return 'Please select an access level.';
@@ -1235,7 +1631,8 @@ function validateForm(){
       return 'Please select at least one property.';
     if(level==='VP POD' && !val('add-pod-select'))
       return 'Please select a pod.';
-    if(!val('add-first')||!val('add-last')||!val('add-email'))
+    if(!val('add-first')||!val('add-last')||!val('add-email')) return 'Please fill in all required fields.';
+    if(!isValidEmail(val('add-email')))
       return 'Please fill in all required fields.';
   } else if(currentAction==='Update'){
     if(!val('upd-property')) return 'Please select a property.';
@@ -1325,6 +1722,8 @@ async function submitForm(){
       body:JSON.stringify({title,notes})
     });
     if(res.ok||res.status===202){
+      // Log submission to Supabase
+      logSubmission(title, notes).catch(()=>{});
       showPopup();
       resetForm();
     } else {
@@ -1339,7 +1738,7 @@ async function submitForm(){
 
 function resetForm(){
   ['add-first','add-last','add-email','add-notes',
-   'upd-change-notes','upd-notes','rem-notes'].forEach(id=>{
+   'upd-notes','rem-notes'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
   document.getElementById('add-access-level').value='';
@@ -1348,6 +1747,7 @@ function resetForm(){
   document.getElementById('add-cdi-notice').style.display='none';
   document.getElementById('upd-property').value='';
   document.getElementById('rem-property').value='';
+  document.getElementById('rem-reason').value='';
   document.getElementById('upd-manager-section').style.display='none';
   document.getElementById('upd-action-section').style.display='none';
   document.getElementById('rem-manager-section').style.display='none';
@@ -1370,6 +1770,25 @@ function showStatus(type,icon,msg){
 function clearStatus(){ document.getElementById('status-box').className='status-box'; }
 
 loadProperties();
+
+// Initialise all searchable selects after DOM ready
+(function initSearchables(){
+  const configs = [
+    ['add-access-level',   'Select access level...'],
+    ['add-property-select','Select a property...'],
+    ['add-pod-select',     'Select a POD...'],
+    ['upd-property',       'Select a property...'],
+    ['upd-manager',        'Select a manager...'],
+    ['upd-transfer-prop',  'Select new property...'],
+    ['upd-addprop-select', 'Select a property...'],
+    ['upd-removeprop-select','Select a property...'],
+    ['rem-property',       'Select a property...'],
+    ['rem-manager',        'Select a manager...'],
+    ['rem-reason',         'Select a reason...'],
+    ['upd-new-role',       'Select new level...'],
+  ];
+  configs.forEach(([id, ph]) => makeSearchable(id, ph));
+})();
 </script>
 <div style="text-align:center;padding:2rem 1rem 1rem;font-size:12px;color:#999;font-family:'DM Sans',sans-serif;">
   © 2026 HS Brands Global. All rights reserved. Built by HS Brands Global.
