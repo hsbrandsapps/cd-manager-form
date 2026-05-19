@@ -194,8 +194,8 @@ select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/
     <p class="dup-popup-title">Manager Already Exists</p>
     <p class="dup-popup-sub" id="dup-popup-msg">A manager with this email already exists in the system. Would you like to switch to Update instead?</p>
     <div class="dup-popup-btns">
-      <button class="dup-btn-yes" onclick="switchToUpdate()">Yes, Update</button>
-      <button class="dup-btn-no" onclick="closeDupPopup()">No, Continue Adding</button>
+      <button class="dup-btn-yes" onclick="switchToUpdate()">Yes, Switch to Update</button>
+      <button class="dup-btn-no" onclick="closeDupPopup()">Cancel</button>
     </div>
   </div>
 </div>
@@ -1042,7 +1042,7 @@ function checkDuplicateEmail(){
   const match = MANAGERS.find(m=>m.email.toLowerCase()===email);
   if(match){
     document.getElementById('dup-popup-msg').textContent=
-      `${match.firstName} ${match.lastName} (${match.property}) already exists with this email. Would you like to switch to Update instead?`;
+      `${match.firstName} ${match.lastName} already exists with this email. Would you like to switch to Update instead?`;
     document.getElementById('dup-popup').classList.add('show');
   }
 }
@@ -1050,6 +1050,30 @@ function closeDupPopup(){ document.getElementById('dup-popup').classList.remove(
 function switchToUpdate(){
   closeDupPopup();
   setAction('Update');
+
+  // Get the email that was typed in the Add form
+  const email = document.getElementById('add-email').value.trim().toLowerCase();
+  const match = MANAGERS.find(m => m.email.toLowerCase() === email);
+  if(!match) return;
+
+  // Set the property dropdown and trigger manager load
+  const propSel = document.getElementById('upd-property');
+  propSel.value = match.property;
+  loadManagersForProperty('update');
+
+  // Wait for managers to load then select the matching one
+  setTimeout(()=>{
+    const manSel = document.getElementById('upd-manager');
+    for(let i=0; i<manSel.options.length; i++){
+      const idx = manSel.options[i].dataset.idx;
+      if(idx !== undefined && MANAGERS[parseInt(idx)].email.toLowerCase() === email){
+        manSel.selectedIndex = i;
+        showManagerCard('update');
+        document.getElementById('upd-action-section').style.display = 'block';
+        break;
+      }
+    }
+  }, 100);
 }
 
 // ── Update/Remove manager loading ──
